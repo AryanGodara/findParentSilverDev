@@ -27,6 +27,21 @@ The project provides a simplistic simulation of a file system hierarchy. It incl
   - `findFileByName`: Searches for a file by its name, considering both direct names and aliases. It recursively searches through children and aliases to find the specified file.
   - `findParent`: Determines the closest common parent directory of two files. It uses a helper function to find the paths from the root to each file and then compares these paths to find the common parent.
 
+### Softlinks vs Aliases (according to me)
+
+The concepts of "alias" and "soft link" (or symbolic link) come from different contexts but share the idea of referring to another entity. However, they operate at different levels and in somewhat different manners:
+
+Alias
+Context: Aliases are often used in various software applications, command shells, and programming environments to refer to another command, function, or sometimes file paths with a simpler or alternative name.
+Functionality: An alias is essentially a shortcut or a nickname to another command or entity. In command shells, for example, an alias might allow a user to execute a long command using a short nickname.
+Scope: Typically, the use of an alias is limited to the context or environment in which it is defined, such as a shell session or a specific application.
+Soft Link (Symbolic Link)
+Context: Soft links are used within file systems to create a reference to another file or directory.
+Functionality: A soft link is a special type of file that points to another file or directory path. When you access a soft link, the file system redirects you to the file or directory it points to. Unlike hard links, soft links can cross file systems and can link to directories.
+Durability: Soft links remain valid even if the target file or directory is moved within the same file system (though they will break if the target is deleted or moved to a different file system). They are more flexible than hard links, which cannot link directories or cross file systems.
+File System Level: Soft links operate at the file system level, meaning they are recognized and resolved by the operating system's file system.
+In essence, while both aliases and soft links provide a way to refer to another entity using a different name or path, aliases are more about convenience within a specific context (like a command shell or an application), and soft links are about creating a navigable reference within a file system that points to another file or directory. Soft links are more versatile and integrated into the file system's structure, allowing for more complex file and directory arrangements and access patterns.
+
 ### Testing
 
 The project includes a test suite written with the `testing` package and the `testify` assertion library for Go. The tests cover various scenarios, including:
