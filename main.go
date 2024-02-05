@@ -12,14 +12,14 @@ var (
 type file struct {
 	name     string
 	children []*file
-	aliases  map[string]*file
+	aliases  map[*file]*file
 }
 
 func newFile(name string) *file {
 	return &file{
 		name:     name,
 		children: make([]*file, 0),
-		aliases:  make(map[string]*file),
+		aliases:  make(map[*file]*file),
 	}
 }
 
@@ -27,16 +27,20 @@ func (f *file) addChild(child *file) {
 	f.children = append(f.children, child)
 }
 
-func (f *file) addAlias(alias string, target *file) {
+func (f *file) addAlias(alias, target *file) {
 	f.aliases[alias] = target
 }
 
 func (f *file) findFileByName(name string) (*file, bool) {
+	if f == nil {
+		return nil, true
+	}
+
 	if f.name == name {
 		return f, true
 	}
 	for alias, target := range f.aliases {
-		if alias == name {
+		if alias.name == name {
 			return target, true
 		}
 	}
@@ -50,6 +54,10 @@ func (f *file) findFileByName(name string) (*file, bool) {
 }
 
 func (root *file) findParent(file1, file2 *file) (*file, error) {
+	if root == nil || file1 == nil || file2 == nil {
+		return nil, errFileNil
+	}
+
 	// Find the paths from the root to each file.
 	pathToFile1, err := root.findPath(file1)
 	if err != nil {
@@ -117,7 +125,8 @@ func main() {
 	a.addChild(d)
 
 	// Add aliases
-	root.addAlias("var", a)
+	_var := newFile("var")
+	root.addAlias(_var, a)
 
 	file1, found1 := root.findFileByName("b")
 	if !found1 {
