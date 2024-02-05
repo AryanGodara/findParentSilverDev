@@ -6,9 +6,7 @@ This project is implemented in Go, a statically typed, compiled programming lang
 
 ```
 And now, the real reason is that I'm a Go enthusiast and I love to code in Go 😄
-Plus, the code is simple and easy to understand; where I felt that if I coded this in Rust, I'd be more focused on 
-explaining why I used all the features of Rust and not the actual code. (And spend an extra hour handling the references in
-my aliases hashmap😅)
+Plus, since it's easier to read the code, even for a non-Go developer, I thought it would be a good choice for this project.
 
 But I'd love to create a CLI tool for this in Rust, using the actual filesystem and not a simulated one.
 ```
