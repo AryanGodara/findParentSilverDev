@@ -15,6 +15,7 @@ var (
 // file represents a node in the file system tree, which could be a file or a directory.
 type file struct {
 	name     string
+	parent   *file
 	children []*file
 	aliases  map[*file]*file
 	isLink   bool
@@ -26,6 +27,7 @@ func newFile(name string) *file {
 	return &file{
 		name:     name,
 		children: make([]*file, 0),
+		parent:   nil,
 		aliases:  make(map[*file]*file),
 		isLink:   false,
 		target:   nil,
@@ -38,7 +40,7 @@ func (f *file) addChild(child *file) {
 		fmt.Println("Cannot add a child to a soft link.")
 		return
 	}
-
+	child.parent = f
 	f.children = append(f.children, child)
 }
 
@@ -109,6 +111,27 @@ func (root *file) findPath(_file *file) ([]*file, error) {
 		return []*file{}, errFileNil
 	}
 
+	f := _file
+	path := make([]*file, 0)
+
+	for f.parent != nil {
+		path = append([]*file{f}, path...)
+		f = f.parent
+	}
+	if f != root {
+		return []*file{}, errFileNotFound
+	}
+
+	path = append([]*file{root}, path...)
+	return path, nil
+}
+
+// DEPRECATED
+func (root *file) _findPath(_file *file) ([]*file, error) {
+	if root == nil || _file == nil {
+		return []*file{}, errFileNil
+	}
+
 	// If the root is the target file, return a path containing only the root.
 	if root == _file {
 		return []*file{root}, nil
@@ -117,7 +140,7 @@ func (root *file) findPath(_file *file) ([]*file, error) {
 	// Recursively search for the target file in the children of the root.
 	for _, child := range root.children {
 		// Find the path from the child to the target file.
-		path, err := child.findPath(_file)
+		path, err := child._findPath(_file)
 		if err != nil && err != errFileNotFound {
 			return nil, err
 		}
