@@ -5,10 +5,14 @@ import (
 )
 
 var (
-	errFileNil      error = fmt.Errorf("file cannot be nil")
+	// errFileNil indicates that a file operation was attempted on a nil reference.
+	errFileNil error = fmt.Errorf("file cannot be nil")
+
+	// errFileNotFound indicates that the requested file could not be found in the file system tree.
 	errFileNotFound error = fmt.Errorf("file not found")
 )
 
+// file represents a node in the file system tree, which could be a file or a directory.
 type file struct {
 	name     string
 	children []*file
@@ -17,6 +21,7 @@ type file struct {
 	target   *file
 }
 
+// newFile creates and returns a new file node with the specified name.
 func newFile(name string) *file {
 	return &file{
 		name:     name,
@@ -27,6 +32,7 @@ func newFile(name string) *file {
 	}
 }
 
+// addChild adds a child file node to the current file node. If the current node is a soft link, it will not add a child and print an error message instead.
 func (f *file) addChild(child *file) {
 	if f.isLink {
 		fmt.Println("Cannot add a child to a soft link.")
@@ -36,10 +42,12 @@ func (f *file) addChild(child *file) {
 	f.children = append(f.children, child)
 }
 
+// addAlias creates an alias from one file node to another. In the context of this updated implementation, it could be used to simulate the behavior of soft links.
 func (f *file) addAlias(alias, target *file) {
 	f.aliases[alias] = target
 }
 
+// findFileByName searches for a file by its name within the file system tree, considering aliases and resolving soft links as necessary.
 func (f *file) findFileByName(name string) (*file, bool) {
 	if f == nil {
 		return nil, true
@@ -66,6 +74,7 @@ func (f *file) findFileByName(name string) (*file, bool) {
 	return nil, false
 }
 
+// findParent finds the closest common parent directory of two given files within the file system tree.
 func (root *file) findParent(file1, file2 *file) (*file, error) {
 	if root == nil || file1 == nil || file2 == nil {
 		return nil, errFileNil
@@ -94,7 +103,7 @@ func (root *file) findParent(file1, file2 *file) (*file, error) {
 	return parent, nil
 }
 
-// findPath is a helper function that finds the path from the root to the given file node.
+// findPath is a helper function that finds and returns the path from the root to a given file node.
 func (root *file) findPath(_file *file) ([]*file, error) {
 	if root == nil || _file == nil {
 		return []*file{}, errFileNil
@@ -123,6 +132,7 @@ func (root *file) findPath(_file *file) ([]*file, error) {
 	return nil, errFileNotFound
 }
 
+// Basic usage of the file system tree.
 func main() {
 	// Create a filesystem tree.
 	root := newFile("root")
