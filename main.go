@@ -13,6 +13,8 @@ type file struct {
 	name     string
 	children []*file
 	aliases  map[*file]*file
+	isLink   bool
+	target   *file
 }
 
 func newFile(name string) *file {
@@ -20,10 +22,17 @@ func newFile(name string) *file {
 		name:     name,
 		children: make([]*file, 0),
 		aliases:  make(map[*file]*file),
+		isLink:   false,
+		target:   nil,
 	}
 }
 
 func (f *file) addChild(child *file) {
+	if f.isLink {
+		fmt.Println("Cannot add a child to a soft link.")
+		return
+	}
+
 	f.children = append(f.children, child)
 }
 
@@ -34,6 +43,10 @@ func (f *file) addAlias(alias, target *file) {
 func (f *file) findFileByName(name string) (*file, bool) {
 	if f == nil {
 		return nil, true
+	}
+
+	if f.isLink {
+		return f.target.findFileByName(name)
 	}
 
 	if f.name == name {
