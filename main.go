@@ -5,7 +5,8 @@ import (
 )
 
 var (
-	errFileNil error = fmt.Errorf("file cannot be nil")
+	errFileNil      error = fmt.Errorf("file cannot be nil")
+	errFileNotFound error = fmt.Errorf("file not found")
 )
 
 type file struct {
@@ -21,10 +22,6 @@ func (f *file) addChild(child *file) {
 	f.children = append(f.children, child)
 }
 
-func (f *file) getChildren(_file *file) []*file {
-	return _file.children
-}
-
 func (root *file) findParent(file1, file2 *file) (*file, error) {
 	// Find the paths from the root to each file.
 	pathToFile1, err := root.findPath(file1)
@@ -36,12 +33,17 @@ func (root *file) findParent(file1, file2 *file) (*file, error) {
 		return nil, err
 	}
 
-	// If either path is empty, return nil.
-	if len(pathToFile1) == 0 || len(pathToFile2) == 0 {
-		return nil, fmt.Errorf("path not found")
+	// Find the closest common parent directory.
+	var parent *file
+	for i := 0; i < len(pathToFile1) && i < len(pathToFile2); i++ {
+		if pathToFile1[i] == pathToFile2[i] {
+			parent = pathToFile1[i]
+		} else {
+			break
+		}
 	}
 
-	return nil, nil
+	return parent, nil
 }
 
 // findPath is a helper function that finds the path from the root to the given file node.
@@ -58,16 +60,19 @@ func (root *file) findPath(_file *file) ([]*file, error) {
 	// Recursively search for the target file in the children of the root.
 	for _, child := range root.children {
 		// Find the path from the child to the target file.
-		path := child.findPath(_file)
+		path, err := child.findPath(_file)
+		if err != nil && err != errFileNotFound {
+			return nil, err
+		}
 
-		// If the path contains the target file, add the root to the path and return it.
-		if len(path) > 0 {
-			return append([]*file{root}, path...)
+		// If the target file is found in the subtree rooted at the child, append the child to the path and return it.
+		if path != nil {
+			return append([]*file{root}, path...), nil
 		}
 	}
 
 	// If the target file is not found in the subtree rooted at the root, return nil.
-	return nil, nil
+	return nil, errFileNotFound
 }
 
 func main() {
@@ -85,10 +90,11 @@ func main() {
 	a.addChild(d)
 
 	// Find the closest common parent directory.
-	parent := root.findParent(c, d)
-	if parent != nil {
-		fmt.Println("The closest common parent directory is:", parent.name)
-	} else {
-		fmt.Println("No common parent directory found.")
+	parent, err := root.findParent(b, d)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+
+	fmt.Println(parent.name)
 }
