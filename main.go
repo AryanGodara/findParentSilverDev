@@ -12,14 +12,41 @@ var (
 type file struct {
 	name     string
 	children []*file
+	aliases  map[string]*file
 }
 
 func newFile(name string) *file {
-	return &file{name: name}
+	return &file{
+		name:     name,
+		children: make([]*file, 0),
+		aliases:  make(map[string]*file),
+	}
 }
 
 func (f *file) addChild(child *file) {
 	f.children = append(f.children, child)
+}
+
+func (f *file) addAlias(alias string, target *file) {
+	f.aliases[alias] = target
+}
+
+func (f *file) findFileByName(name string) (*file, bool) {
+	if f.name == name {
+		return f, true
+	}
+	for alias, target := range f.aliases {
+		if alias == name {
+			return target, true
+		}
+	}
+	for _, child := range f.children {
+		foundFile, found := child.findFileByName(name)
+		if found {
+			return foundFile, true
+		}
+	}
+	return nil, false
 }
 
 func (root *file) findParent(file1, file2 *file) (*file, error) {
@@ -89,12 +116,26 @@ func main() {
 	a.addChild(c)
 	a.addChild(d)
 
-	// Find the closest common parent directory.
-	parent, err := root.findParent(b, d)
+	// Add aliases
+	root.addAlias("var", a)
+
+	file1, found1 := root.findFileByName("b")
+	if !found1 {
+		fmt.Println("File b not found")
+		return
+	}
+
+	file2, found2 := root.findFileByName("d")
+	if !found2 {
+		fmt.Println("Alias var not found")
+		return
+	}
+
+	parent, err := root.findParent(file1, file2)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(parent.name)
+	fmt.Println("The closest common parent directory is:", parent.name)
 }
